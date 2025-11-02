@@ -1,0 +1,6 @@
+venv_invoice/
+__pycache__/
+*.pyc
+dev.db
+.env
+
