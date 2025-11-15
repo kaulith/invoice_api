@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{% block title %}{% endblock %}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class'
+    }
+  </script>
+  <script>
+    // Tailwind dark mode based on user's theme setting
+    if ('{{ theme }}' === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  </script>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white">
+  <nav class="{% if '/auth' in request.path %}hidden{% endif %} bg-blue-600 dark:bg-gray-800 text-white p-4 flex justify-between items-center relative">
+    <div class="flex items-center">
+      <a href="/dashboard" class="mr-4 font-semibold hover:underline">Dashboard</a>
+      <a href="/customers/_page" class="mr-4 hover:underline">Customers</a>
+      <a href="/items/_page" class="mr-4 hover:underline">Items</a>
+      <a href="/invoices/_page" class="hover:underline">Invoices</a>
+    </div>
+    
+    <div class="flex items-center space-x-2">
+      {% if session.get('user_id') %}
+        <a href="/settings/"
+          class="bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 font-semibold px-3 py-1 rounded hover:bg-blue-100 dark:hover:bg-gray-600 transition">
+          Settings
+        </a>
+        
+        <form action="{{ url_for('auth.logout') }}" method="get" class="inline-block">
+          <button type="submit"
+            class="bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 font-semibold px-3 py-1 rounded hover:bg-blue-100 dark:hover:bg-gray-600 transition">
+            Logout
+          </button>
+        </form>
+      {% endif %}
+      
+      <div class="relative inline-block text-left">
+        {% set path = request.path %}
+        {% if '/dashboard' in path %}
+          <button id="addButton"
+            class="bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 font-semibold px-3 py-1 rounded hover:bg-blue-100 dark:hover:bg-gray-600 transition">
+            + Add
+          </button>
+          <div id="addMenu"
+            class="hidden absolute right-0 mt-2 w-40 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md shadow-lg z-10">
+            <a href="/add/customer" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-100">Customer</a>
+            <a href="/add/item" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-100">Item</a>
+            <a href="/add/invoice" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-100">Invoice</a>
+          </div>
+        {% elif 'customers' in path %}
+          <a href="/add/customer"
+            class="bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 font-semibold px-3 py-1 rounded hover:bg-blue-100 dark:hover:bg-gray-600 transition">+ Add Customer</a>
+        {% elif 'items' in path %}
+          <a href="/add/item"
+            class="bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 font-semibold px-3 py-1 rounded hover:bg-blue-100 dark:hover:bg-gray-600 transition">+ Add Item</a>
+        {% elif 'invoices' in path %}
+          <a href="/add/invoice"
+            class="bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 font-semibold px-3 py-1 rounded hover:bg-blue-100 dark:hover:bg-gray-600 transition">+ Add Invoice</a>
+        {% endif %}
+      </div>
+    </div>
+  </nav>
+  
+  <div class="p-6 min-h-screen">
+    {% block content %}{% endblock %}
+  </div>
+  
+  <script>
+    const addButton = document.getElementById('addButton');
+    const addMenu = document.getElementById('addMenu');
+    if (addButton && addMenu) {
+      addButton.addEventListener('click', () => addMenu.classList.toggle('hidden'));
+      document.addEventListener('click', e => {
+        if (!addButton.contains(e.target) && !addMenu.contains(e.target))
+          addMenu.classList.add('hidden');
+      });
+    }
+  </script>
+  {% block extra_scripts %}{% endblock %}
+</body>
+</html>

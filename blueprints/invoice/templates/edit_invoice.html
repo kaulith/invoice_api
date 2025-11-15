@@ -1,0 +1,303 @@
+{% extends "base.html" %}
+{% block title %}Edit Invoice #{{ invoice.id }}{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto mt-6 bg-white dark:bg-gray-800 p-6 rounded shadow-md">
+
+  <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-gray-100">
+    Edit Invoice #{{ invoice.id }}
+  </h2>
+
+  <!-- Back button -->
+  <div class="mb-4 flex justify-between items-center">
+    <a href="{{ url_for('invoice.invoices_page') }}" class="text-blue-600 dark:text-blue-400 hover:underline">
+      ← Back to Invoices
+    </a>
+  </div>
+
+  <!-- Flash messages -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="mb-4">
+        {% for category, message in messages %}
+          <div class="p-3 rounded {{ 'bg-green-50 text-green-800' if category == 'success' else 'bg-red-50 text-red-800' }}">
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <form method="POST" id="editInvoiceForm" novalidate
+        action="{{ url_for('invoice.edit_invoice_page', invoice_id=invoice.id) }}">
+
+    <!-- Customer -->
+    <label class="block mb-4 text-gray-900 dark:text-gray-100">
+      Customer
+      <select name="customer_id" id="customerSelect"
+              class="w-full border border-gray-300 dark:border-gray-600 p-2 rounded bg-white dark:bg-gray-700
+                     text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+        {% for c in customers %}
+        <option value="{{ c.id }}" {% if c.id == invoice.customer.id %}selected{% endif %}>
+          {{ c.name }}
+        </option>
+        {% endfor %}
+      </select>
+    </label>
+
+    <!-- Items Table -->
+    <div class="mb-4">
+      <h3 class="font-semibold mb-2 text-gray-900 dark:text-gray-100">Invoice Items</h3>
+
+      <div class="overflow-x-auto border border-gray-300 dark:border-gray-600 rounded">
+        <table class="w-full border-collapse text-sm">
+          <thead class="bg-gray-100 dark:bg-gray-700">
+            <tr>
+              <th class="p-2 text-left text-gray-900 dark:text-gray-100">Item</th>
+              <th class="p-2 text-right text-gray-900 dark:text-gray-100">Qty</th>
+              <th class="p-2 text-right text-gray-900 dark:text-gray-100">Price (₹)</th>
+              <th class="p-2 text-right text-gray-900 dark:text-gray-100">Amount (₹)</th>
+              <th class="p-2 text-center text-gray-900 dark:text-gray-100">Remove</th>
+            </tr>
+          </thead>
+
+          <tbody id="itemsTable">
+            {% for ii in invoice_items %}
+            <tr class="border-t border-gray-300 dark:border-gray-600 item-row">
+              <td class="p-2">
+                <select name="item_id[]" class="item-select w-full border border-gray-300 dark:border-gray-600 p-1 rounded
+                      bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+                  <option value="">Select item</option>
+                  {% for item in all_items %}
+                  <option value="{{ item.id }}" data-price="{{ item.price }}"
+                    {% if item.id == ii.item.id %}selected{% endif %}>
+                    {{ item.name }}
+                  </option>
+                  {% endfor %}
+                </select>
+              </td>
+
+              <td class="p-2">
+                <input type="number" name="quantity[]" min="1" value="{{ ii.quantity }}"
+                       class="item-qty w-20 text-right border border-gray-300 dark:border-gray-600 p-1 rounded
+                              bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+              </td>
+
+              <td class="p-2">
+                <input type="number" name="unit_price[]" step="0.01" min="0.01" value="{{ ii.unit_price }}"
+                       class="item-price w-24 text-right border border-gray-300 dark:border-gray-600 p-1 rounded
+                              bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">DB price shown on select</p>
+              </td>
+
+              <td class="p-2 text-right item-amount text-gray-900 dark:text-gray-100">
+                {{ "₹{:,.2f}".format(ii.amount) }}
+              </td>
+
+              <td class="p-2 text-center">
+                <button type="button"
+                        class="remove-row text-red-600 hover:text-red-800 text-lg font-bold">
+                  &times;
+                </button>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Add Item Button -->
+    <div class="mb-4">
+      <button type="button" id="addRow"
+              class="bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 px-3 py-1 rounded
+                     hover:bg-gray-300 dark:hover:bg-gray-600 transition">
+        + Add Item
+      </button>
+    </div>
+
+    <!-- Totals -->
+    <div class="border-t border-gray-300 dark:border-gray-600 pt-4 text-right space-y-1">
+      <p class="text-gray-900 dark:text-gray-100">
+        <strong>Subtotal:</strong> ₹ <span id="subtotalDisplay">{{ "{:,.2f}".format(invoice.subtotal) }}</span>
+      </p>
+
+      {% if invoice.applied_gst %}
+      <p class="text-gray-900 dark:text-gray-100">
+        <strong>GST ({{ invoice.gst_percent_used }}%):</strong> ₹ <span id="gstDisplay">{{ "{:,.2f}".format(invoice.gst_amount) }}</span>
+      </p>
+      {% else %}
+      <p class="text-gray-500 text-sm italic">GST not applied for this invoice</p>
+      {% endif %}
+
+      <p class="mt-1 text-xl font-bold text-gray-900 dark:text-gray-100">
+        Total: ₹ <span id="totalDisplay">{{ "{:,.2f}".format(invoice.total) }}</span>
+      </p>
+    </div>
+
+    <!-- Buttons -->
+    <div class="mt-6 flex items-center gap-3">
+      <button id="saveBtn" type="submit"
+              class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition">
+        Save
+      </button>
+
+      <a href="{{ url_for('invoice.invoices_page') }}"
+         class="text-blue-600 dark:text-blue-400 hover:underline">
+        Cancel
+      </a>
+    </div>
+  </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const itemsTable = document.getElementById('itemsTable');
+  const addRowBtn = document.getElementById('addRow');
+  const saveBtn = document.getElementById('saveBtn');
+
+const GST_PERCENT = parseFloat("{{ invoice.gst_percent_used if invoice.applied_gst else 0 }}");
+
+  function toNumber(v) {
+    const n = parseFloat(v);
+    return isNaN(n) ? 0 : n;
+  }
+  function fmtINR(n) {
+    return n.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+  function scrollToAndFocus(el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (el.focus) el.focus();
+  }
+
+  function updateTotals() {
+    let subtotal = 0;
+    const rows = itemsTable.querySelectorAll('tr.item-row');
+
+    rows.forEach(row => {
+      const qtyInput = row.querySelector('.item-qty');
+      const priceInput = row.querySelector('.item-price');
+      const amountCell = row.querySelector('.item-amount');
+
+      const qty = toNumber(qtyInput.value);
+      const price = toNumber(priceInput.value);
+      const amount = qty * price;
+
+      amountCell.textContent = fmtINR(amount);
+      subtotal += amount;
+    });
+
+    const gstAmount = subtotal * (GST_PERCENT / 100);
+    const total = subtotal + gstAmount;
+
+    document.getElementById('subtotalDisplay').textContent = fmtINR(subtotal);
+    document.getElementById('gstDisplay').textContent = fmtINR(gstAmount);
+    document.getElementById('totalDisplay').textContent = fmtINR(total);
+  }
+
+  itemsTable.addEventListener('change', (e) => {
+    if (e.target.classList.contains('item-select')) {
+      const select = e.target;
+      const selected = select.selectedOptions[0];
+      const dbPrice = selected ? selected.dataset.price : null;
+      const row = select.closest('tr');
+      const priceInput = row.querySelector('.item-price');
+
+      if (dbPrice !== undefined && dbPrice !== null && dbPrice !== '') {
+        priceInput.value = parseFloat(dbPrice).toFixed(2);
+      } else {
+        priceInput.value = '';
+      }
+      updateTotals();
+    }
+  });
+
+  itemsTable.addEventListener('input', (e) => {
+    if (e.target.classList.contains('item-qty') || e.target.classList.contains('item-price')) {
+      updateTotals();
+    }
+  });
+
+  itemsTable.addEventListener('click', (e) => {
+    if (e.target.classList.contains('remove-row')) {
+      const rows = itemsTable.querySelectorAll('tr.item-row');
+      if (rows.length <= 1) {
+        alert('Invoice must have at least one item.');
+        return;
+      }
+      if (!confirm('Remove this item row?')) return;
+      e.target.closest('tr').remove();
+      updateTotals();
+    }
+  });
+
+  addRowBtn.addEventListener('click', () => {
+    const firstRow = itemsTable.querySelector('tr.item-row');
+    if (!firstRow) {
+      console.error('No prototype row found');
+      return;
+    }
+    const clone = firstRow.cloneNode(true);
+
+    clone.querySelector('.item-select').value = '';
+    clone.querySelector('.item-price').value = '';
+    clone.querySelector('.item-qty').value = 1;
+    clone.querySelector('.item-amount').textContent = fmtINR(0);
+
+    clone.querySelectorAll('select,input').forEach(el => el.classList.remove('border-red-500', 'ring-red-200'));
+
+    itemsTable.appendChild(clone);
+    scrollToAndFocus(clone.querySelector('.item-select'));
+    updateTotals();
+  });
+
+  document.getElementById('editInvoiceForm').addEventListener('submit', function (ev) {
+    itemsTable.querySelectorAll('select,input').forEach(el => el.classList.remove('border-red-500'));
+
+    const rows = itemsTable.querySelectorAll('tr.item-row');
+    if (rows.length === 0) {
+      alert('Invoice must contain at least one item.');
+      ev.preventDefault();
+      return;
+    }
+
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      const select = row.querySelector('.item-select');
+      const qty = row.querySelector('.item-qty');
+      const price = row.querySelector('.item-price');
+
+      if (!select.value) {
+        alert(`Please select an item in row ${i+1}`);
+        select.classList.add('border-red-500');
+        scrollToAndFocus(select);
+        ev.preventDefault();
+        return;
+      }
+
+      if (toNumber(qty.value) <= 0) {
+        alert(`Quantity must be at least 1 in row ${i+1}`);
+        qty.classList.add('border-red-500');
+        scrollToAndFocus(qty);
+        ev.preventDefault();
+        return;
+      }
+
+      if (toNumber(price.value) <= 0) {
+        alert(`Price must be greater than 0 in row ${i+1}`);
+        price.classList.add('border-red-500');
+        scrollToAndFocus(price);
+        ev.preventDefault();
+        return;
+      }
+    }
+
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving...';
+
+  });
+
+  updateTotals();
+});
+</script>
+{% endblock %}

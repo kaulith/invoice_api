@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+{% block title %}Invoice #{{ invoice.id }}{% endblock %}
+{% block content %}
+<div class="max-w-3xl mx-auto bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+
+  <!-- Header -->
+  <div class="flex justify-between items-center mb-6 border-b border-gray-300 dark:border-gray-600 pb-3">
+    <h1 class="text-2xl font-bold text-blue-700 dark:text-blue-400">Invoice #{{ invoice.id }}</h1>
+    <p class="text-gray-500 dark:text-gray-400">
+      {{ invoice.created_at.strftime('%Y-%m-%d %H:%M') }}
+    </p>
+  </div>
+
+  <!-- Customer Info -->
+  <div class="mb-6">
+    <h2 class="text-lg font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-300 dark:border-gray-600 pb-1 mb-2">
+      Customer Information
+    </h2>
+    <p class="text-gray-800 dark:text-gray-300"><strong>Name:</strong> {{ customer.name }}</p>
+    <p class="text-gray-800 dark:text-gray-300"><strong>Email:</strong> {{ customer.email or '—' }}</p>
+    <p class="text-gray-800 dark:text-gray-300"><strong>Phone:</strong> {{ customer.phone or '—' }}</p>
+  </div>
+
+  <!-- Items -->
+  <div class="mb-6">
+    <h2 class="text-lg font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-300 dark:border-gray-600 pb-1 mb-2">
+      Items
+    </h2>
+
+    <table class="w-full border-collapse border border-gray-300 dark:border-gray-600 text-sm">
+      <thead class="bg-gray-100 dark:bg-gray-700">
+        <tr>
+          <th class="border p-2 text-left">Item</th>
+          <th class="border p-2 text-right">Quantity</th>
+          <th class="border p-2 text-right">Unit Price</th>
+          <th class="border p-2 text-right">Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for i in items %}
+        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+          <td class="border p-2">{{ i.item.name }}</td>
+          <td class="border p-2 text-right">{{ i.quantity }}</td>
+          <td class="border p-2 text-right">₹{{ i.unit_price|indian_currency }}</td>
+          <td class="border p-2 text-right">₹{{ i.amount|indian_currency }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Totals Section -->
+  <div class="flex justify-end mb-6">
+    <div class="w-80 text-sm">
+
+      <!-- Subtotal -->
+      <div class="flex justify-between py-2 border-b border-gray-300 dark:border-gray-600">
+        <span class="text-gray-700 dark:text-gray-300">Subtotal:</span>
+        <span class="text-gray-900 dark:text-gray-100">₹{{ subtotal|indian_currency }}</span>
+      </div>
+
+      <!-- GST -->
+      {% if apply_gst %}
+      <div class="flex justify-between py-2 border-b border-gray-300 dark:border-gray-600">
+        <span class="text-gray-700 dark:text-gray-300">GST ({{ gst_percent }}%):</span>
+        <span class="text-gray-900 dark:text-gray-100">₹{{ gst_amount|indian_currency }}</span>
+      </div>
+      {% else %}
+      <div class="flex justify-between py-2 border-b border-gray-300 dark:border-gray-600">
+        <span class="text-gray-700 dark:text-gray-300">GST:</span>
+        <span class="text-gray-500 dark:text-gray-400 italic">Not Applied</span>
+      </div>
+      {% endif %}
+
+      <!-- Total -->
+      <div class="flex justify-between py-3 text-xl font-bold text-gray-800 dark:text-gray-200 border-t-2 border-gray-300 dark:border-gray-600">
+        <span>Total:</span>
+        <span>₹{{ invoice.total|indian_currency }}</span>
+      </div>
+
+      <!-- ARN Section -->
+      {% if invoice.arn_number %}
+      <div class="mt-4 p-3 bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 rounded">
+        <div class="flex justify-between items-center">
+          <span class="font-semibold">ARN Number:</span>
+          <span class="font-mono font-bold">{{ invoice.arn_number }}</span>
+        </div>
+        <p class="text-xs mt-1 text-right">
+          Generated: {{ invoice.arn_generated_at.strftime('%Y-%m-%d %H:%M') }}
+        </p>
+      </div>
+      {% else %}
+      <div class="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900 border border-yellow-200 dark:border-yellow-700 rounded">
+        <div class="flex justify-between items-center mb-2">
+          <span class="font-semibold">ARN Number:</span>
+          <span class="font-mono">Not Generated</span>
+        </div>
+        <button id="generate-arn-btn"
+          class="w-full bg-yellow-600 text-white px-3 py-2 rounded hover:bg-yellow-700 transition text-sm font-medium">
+          Generate ARN Now
+        </button>
+        <p class="text-xs mt-2 text-center">Will be generated when PDF is downloaded</p>
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+
+  <!-- Buttons -->
+  <div class="flex gap-3">
+    <button id="downloadBtn"
+      data-invoice-id="{{ invoice.id }}"
+      class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition">
+      Download PDF
+    </button>
+
+    <a href="{{ back_url }}"
+      class="bg-gray-200 dark:bg-gray-600 dark:text-white px-4 py-2 rounded hover:bg-gray-300 dark:hover:bg-gray-700 transition">
+      ← Back to Invoices
+    </a>
+  </div>
+
+</div>
+
+
+<!-- Loading Modal -->
+<div id="loading-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+  <div class="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-sm mx-4">
+    <div class="flex flex-col items-center">
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+      <p id="loading-text" class="font-semibold text-center">Processing...</p>
+      <p class="text-sm mt-2 text-center">This may take a few seconds</p>
+    </div>
+  </div>
+</div>
+
+<script>
+const invoiceId = parseInt(document.getElementById('downloadBtn').dataset.invoiceId, 10);
+
+function showLoading(msg) {
+  document.getElementById('loading-text').textContent = msg;
+  document.getElementById('loading-modal').classList.remove('hidden');
+}
+function hideLoading() {
+  document.getElementById('loading-modal').classList.add('hidden');
+}
+
+// Generate ARN
+const generateArnBtn = document.getElementById('generate-arn-btn');
+if (generateArnBtn) {
+  generateArnBtn.onclick = async () => {
+    showLoading('Generating ARN...');
+    const res = await fetch(`/invoices/${invoiceId}/generate_arn`, { method: 'POST' });
+    hideLoading();
+    const data = await res.json();
+    if (res.ok) location.reload();
+    else alert(data.error || 'Error generating ARN.');
+  };
+}
+
+// Download PDF
+document.getElementById('downloadBtn').onclick = async () => {
+  showLoading('Creating PDF...');
+  const res = await fetch('/invoices/generate_pdf', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ invoice_id: invoiceId })
+  });
+  hideLoading();
+  if (!res.ok) return alert('Failed to generate PDF.');
+
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `invoice_${invoiceId}.pdf`;
+  a.click();
+  URL.revokeObjectURL(url);
+};
+</script>
+
+{% endblock %}

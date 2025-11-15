@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}Settings{% endblock %}
+{% block content %}
+<div class="max-w-2xl mx-auto">
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Settings</h1>
+    <p class="text-gray-600 dark:text-gray-400 mt-2">Manage your application preferences</p>
+  </div>
+
+  {% with messages = get_flashed_messages(with_categories=true, category_filter=['settings_success', 'settings_error']) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="mb-4 p-4 rounded-md {% if 'success' in category %}bg-green-50 dark:bg-green-900 text-green-800 dark:text-green-200 border border-green-200 dark:border-green-700{% else %}bg-red-50 dark:bg-red-900 text-red-800 dark:text-red-200 border border-red-200 dark:border-red-700{% endif %}">
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <form method="POST" class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 space-y-8">
+    
+    <!-- GST Settings -->
+    <div class="border-b border-gray-300 dark:border-gray-700 pb-8">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Tax Settings</h2>
+        <span class="px-3 py-1 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 text-xs font-medium rounded-full">
+          Global - Applies to All Users
+        </span>
+      </div>
+      
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <label for="apply_gst" class="text-gray-700 dark:text-gray-300 font-medium">Apply GST</label>
+          <p class="text-gray-500 dark:text-gray-400 text-sm mt-1">Enable Goods and Services Tax on all new invoices (affects all users)</p>
+        </div>
+        <div class="flex items-center">
+          <input type="checkbox" id="apply_gst" name="apply_gst" 
+                 {% if global_setting.apply_gst %}checked{% endif %}
+                 class="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 cursor-pointer">
+        </div>
+      </div>
+
+      <div class="max-w-xs">
+        <label for="gst_percent" class="block text-gray-700 dark:text-gray-300 font-medium mb-2">GST Percentage</label>
+        <div class="flex items-center space-x-2">
+          <input type="number" id="gst_percent" name="gst_percent" 
+                 value="{{ global_setting.gst_percent }}" 
+                 step="0.1" 
+                 min="0" 
+                 max="100"
+                 class="w-24 px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+          <span class="text-gray-600 dark:text-gray-400 font-medium">%</span>
+        </div>
+        <p class="text-gray-500 dark:text-gray-400 text-sm mt-2">Default GST rate applied to new invoices (affects all users)</p>
+      </div>
+    </div>
+
+    <!-- Theme Settings -->
+    <div>
+      <label for="theme" class="block text-gray-700 dark:text-gray-300 font-medium mb-3">Theme</label>
+      <select id="theme" name="theme"class="w-full md:w-48 px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer">
+
+        <option value="light" {% if user_setting.theme == 'light' %}selected{% endif %}>Light</option>
+        <option value="dark"  {% if user_setting.theme == 'dark'  %}selected{% endif %}>Dark</option>
+      </select>
+
+    <p class="text-gray-500 dark:text-gray-400 text-sm mt-2">
+      Choose your preferred interface theme (applies to your account only)
+    </p>
+  </div>
+
+
+    <!-- Action Buttons -->
+    <div class="flex gap-3 pt-6 border-t border-gray-300 dark:border-gray-700">
+      <button type="submit" class="px-6 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800">
+        Save Settings
+      </button>
+      <a href="/dashboard" class="px-6 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 font-medium rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition">
+        Cancel
+      </a>
+    </div>
+  </form>
+</div>
+{% endblock %}

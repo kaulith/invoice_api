@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}
+  Customers
+{% endblock %}
+
+{% block hide_add_button %}
+  <a href=/customers/_page/add
+     class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition mb-4 inline-block">
+    + Add Customer
+  </a>
+{% endblock %}
+
+{% block content %}
+  <p class="mb-4 text-gray-900 dark:text-gray-100">
+    Total Customers: {{ customers|length }}
+  </p>
+
+  <div class="overflow-x-auto bg-white dark:bg-gray-800 rounded-lg shadow-md">
+    <table class="w-full border-collapse">
+      <thead class="bg-gray-100 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+        <tr>
+          <th class="p-3 text-left text-gray-900 dark:text-gray-100">ID</th>
+          <th class="p-3 text-left text-gray-900 dark:text-gray-100">Name</th>
+          <th class="p-3 text-left text-gray-900 dark:text-gray-100">Email</th>
+          <th class="p-3 text-left text-gray-900 dark:text-gray-100">Phone</th>
+          <th class="p-3 text-center text-gray-900 dark:text-gray-100">Actions</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {% if customers %}
+          {% for c in customers %}
+            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-200 dark:border-gray-700">
+              <td class="p-3 text-gray-900 dark:text-gray-100">{{ c.id }}</td>
+              <td class="p-3 font-medium text-gray-900 dark:text-gray-100">{{ c.name }}</td>
+              <td class="p-3 text-gray-700 dark:text-gray-300">{{ c.email }}</td>
+              <td class="p-3 text-gray-700 dark:text-gray-300">{{ c.phone }}</td>
+              <td class="p-3 text-center space-x-2">
+                <a href="{{ url_for('customer.customer_invoices', customer_id=c.id) }}"
+                  class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition inline-block">
+                  View Invoices
+                </a>
+                <a href="{{ url_for('customer.edit_customer_page', id=c.id) }}"
+                  class="bg-yellow-600 text-white px-3 py-1 rounded hover:bg-yellow-700 transition inline-block">
+                  Edit
+                </a>
+                <button onclick="deleteCustomer('{{ c.id }}')"
+                        class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 transition">
+                  Delete
+                </button>
+              </td>
+            </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="5" class="p-4 text-center text-gray-700 dark:text-gray-300">
+              No customers found
+            </td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    async function deleteCustomer(id) {
+      if (!confirm("Delete this customer?")) return;
+      try {
+        const res = await fetch(`/customers/${id}`, { method: "DELETE" });
+        const data = await res.json();
+        if (res.ok) {
+          location.reload();
+        } else {
+          alert(data.error || "Failed to delete customer.");
+        }
+      } catch {
+        alert("Error deleting customer.");
+      }
+    }
+  </script>
+{% endblock %}
