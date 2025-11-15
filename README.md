@@ -54,8 +54,6 @@ invoice_api/
 3. Install dependencies
 4. Run the app
 
-Commands:
-
 ```bash
 python3 -m venv venv
 source venv/bin/activate
@@ -64,9 +62,6 @@ python app.py
 ```
 
 ## 📸 Screenshots
-
-Example:
-
 
 ### Login/Signup
 <img width="565" height="441" alt="Screenshot 2025-11-15 at 1 47 52 PM" src="https://github.com/user-attachments/assets/ab700250-0a69-4f03-9ba2-2d079818c16c" /><img width="557" height="565" alt="Screenshot 2025-11-15 at 1 47 57 PM" src="https://github.com/user-attachments/assets/cd2ea29a-219f-40c1-8553-019f2bea88d5" />
