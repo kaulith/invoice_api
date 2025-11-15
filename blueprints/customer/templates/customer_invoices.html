@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Invoices for {{ customer.name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md mt-6">
+  <div class="flex justify-between items-center mb-4">
+    <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
+      Invoices for {{ customer.name }}
+    </h1>
+    <a href="{{ back_url }}"
+      class="text-blue-600 dark:text-blue-400 hover:underline">
+      ← Back to Customer
+    </a>
+  </div>
+
+  {% if invoices %}
+  <div class="overflow-x-auto">
+    <table class="w-full border-collapse">
+      <thead class="bg-gray-100 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+        <tr>
+          <th class="p-3 text-left text-gray-900 dark:text-gray-100">Invoice ID</th>
+          <th class="p-3 text-left text-gray-900 dark:text-gray-100">Date</th>
+          <th class="p-3 text-right text-gray-900 dark:text-gray-100">Total</th>
+          <th class="p-3 text-center text-gray-900 dark:text-gray-100">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for inv in invoices %}
+        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-200 dark:border-gray-700">
+          <td class="p-3 text-gray-900 dark:text-gray-100">{{ inv.id }}</td>
+          <td class="p-3 text-gray-700 dark:text-gray-300">
+            {{ inv.created_at.strftime('%Y-%m-%d %H:%M') }}
+          </td>
+          <td class="p-3 text-right text-gray-900 dark:text-gray-100">
+            {{ (inv.invoice_items | sum(attribute='amount')) | indian_currency }}
+          </td>
+          <td class="p-3 text-center space-x-2">
+            <a href="/invoices/{{ inv.id }}?back={{ url_for('customer.customer_invoices', customer_id=customer.id) }}"
+               class="bg-yellow-600 text-white px-3 py-1 rounded hover:bg-yellow-700 transition inline-block">
+              View
+            </a>
+            <button class="download-btn bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 transition inline-block"
+                    data-invoice-id="{{ inv.id }}">
+              Download PDF
+            </button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+    <p class="text-gray-700 dark:text-gray-300 italic">No invoices found for this customer.</p>
+  {% endif %}
+</div>
+
+<script>
+document.querySelectorAll('.download-btn').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    const invoiceId = btn.getAttribute('data-invoice-id');
+    try {
+      const res = await fetch('/invoices/generate_pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ invoice_id: invoiceId })
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => null);
+        return alert(err?.error || 'Failed to generate PDF');
+      }
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `invoice_${invoiceId}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+
+    } catch (err) {
+      console.error(err);
+      alert('Error downloading PDF.');
+    }
+  });
+});
+</script>
+{% endblock %}

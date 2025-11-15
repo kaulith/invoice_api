@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}
+  Dashboard
+{% endblock %}
+
+{% block content %}
+  <h1 class="text-3xl font-bold mb-6 text-gray-900 dark:text-white">
+    Dashboard Overview
+  </h1>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border border-gray-200 dark:border-gray-700 hover:shadow-md transition">
+      <h2 class="text-lg font-semibold text-gray-600 dark:text-gray-400">Customers</h2>
+      <p class="text-3xl font-bold text-blue-600 dark:text-blue-400 mt-2">
+        {{ total_customers }}
+      </p>
+    </div>
+
+    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border border-gray-200 dark:border-gray-700 hover:shadow-md transition">
+      <h2 class="text-lg font-semibold text-gray-600 dark:text-gray-400">Items</h2>
+      <p class="text-3xl font-bold text-green-600 dark:text-green-400 mt-2">
+        {{ total_items }}
+      </p>
+    </div>
+
+    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border border-gray-200 dark:border-gray-700 hover:shadow-md transition">
+      <h2 class="text-lg font-semibold text-gray-600 dark:text-gray-400">Invoices</h2>
+      <p class="text-3xl font-bold text-purple-600 dark:text-purple-400 mt-2">
+        {{ total_invoices }}
+      </p>
+    </div>
+
+    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border border-gray-200 dark:border-gray-700 hover:shadow-md transition">
+      <h2 class="text-lg font-semibold text-gray-600 dark:text-gray-400">Total Sales</h2>
+      <p class="text-3xl font-bold text-orange-600 dark:text-orange-400 mt-2">
+        ₹{{ total_sales|indian_currency }}
+      </p>
+    </div>
+  </div>
+
+  <div class="flex flex-wrap gap-4">
+    <a href="/customers/_page"
+       class="bg-blue-600 text-white px-5 py-3 rounded-lg hover:bg-blue-700 transition">
+      Manage Customers
+    </a>
+
+    <a href="/items/_page"
+       class="bg-green-600 text-white px-5 py-3 rounded-lg hover:bg-green-700 transition">
+      Manage Items
+    </a>
+
+    <a href="/invoices/_page"
+       class="bg-purple-600 text-white px-5 py-3 rounded-lg hover:bg-purple-700 transition">
+      Manage Invoices
+    </a>
+  </div>
+{% endblock %}

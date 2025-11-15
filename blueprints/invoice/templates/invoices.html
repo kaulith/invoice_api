@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Invoices{% endblock %}
+{% block hide_add_button %}
+<a href="/add/invoice"
+   class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition mb-4 inline-block">
+  + Add Invoice
+</a>
+{% endblock %}
+{% block content %}
+<p class="mb-4 text-gray-900 dark:text-gray-100">Total Invoices: {{ invoices|length }}</p>
+<div class="overflow-x-auto bg-white dark:bg-gray-800 rounded-lg shadow-md">
+  <table class="w-full border-collapse">  
+    <thead class="bg-gray-100 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+      <tr>
+        <th class="p-3 text-left text-gray-900 dark:text-gray-100">ID</th>
+        <th class="p-3 text-left text-gray-900 dark:text-gray-100">Customer</th>
+        <th class="p-3 text-left text-gray-900 dark:text-gray-100">Created At</th>
+        <th class="p-3 text-center text-gray-900 dark:text-gray-100">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% if invoices %}
+        {% for inv in invoices %}
+          <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-200 dark:border-gray-700">
+            <td class="p-3 text-gray-900 dark:text-gray-100">{{ inv.id }}</td>
+            <td class="p-3 font-medium text-gray-900 dark:text-gray-100">{{ inv.customer.name }}</td>
+            <td class="p-3 text-gray-700 dark:text-gray-300">{{ inv.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+            <td class="p-3 text-center space-x-2">
+              <a href="{{ url_for('invoice.view_invoice', invoice_id=inv.id) }}"
+                class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition inline-block">
+                View
+              </a>
+
+              <a href="{{ url_for('invoice.edit_invoice_page', invoice_id=inv.id) }}"
+                class="bg-yellow-600 text-white px-3 py-1 rounded hover:bg-yellow-700 transition inline-block">
+                Edit
+              </a>
+
+              <button onclick="deleteInvoice('{{ inv.id }}')"
+                      class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 transition">
+                Delete
+              </button>
+            </td>
+          </tr>
+        {% endfor %}
+      {% else %}
+        <tr>
+          <td colspan="4" class="p-4 text-center text-gray-700 dark:text-gray-300">No invoices found</td>
+        </tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+
+<script>
+  async function deleteInvoice(id) {
+    if(!confirm("Delete this invoice?")) return;
+    try {
+      const res = await fetch(`/invoices/api/${id}`, { method: "DELETE" });
+      const data = await res.json();
+      if(res.ok) {
+        alert("Invoice deleted successfully");
+        location.reload();
+      } else {
+        alert(data.error || "Failed to delete invoice.");
+      }
+    } catch { 
+      alert("Error deleting invoice."); 
+    }
+  }
+</script>
+{% endblock %}

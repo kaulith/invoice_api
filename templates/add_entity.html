@@ -1,0 +1,287 @@
+{% extends "base.html" %}
+{% block title %}Add {{ entity_type|capitalize }}{% endblock %}
+{% block content %}
+
+<div class="max-w-2xl mx-auto bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">
+<h1 class="text-2xl font-bold mb-6 text-blue-600 dark:text-blue-400">
+    Add {{ entity_type|capitalize }}
+</h1>
+
+<form id="universalAddForm" class="space-y-4">
+
+  <!-- ========================= CUSTOMER FORM ========================= -->
+  {% if entity_type == "customer" %}
+
+    <input id="name" type="text" placeholder="Full Name" tabindex="1"
+      class="border border-gray-300 dark:border-gray-600 p-2 w-full rounded focus:ring-2 focus:ring-blue-400 
+             bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+
+    <input id="email" type="email" placeholder="Email Address" tabindex="2"
+      class="border border-gray-300 dark:border-gray-600 p-2 w-full rounded focus:ring-2 focus:ring-blue-400 
+             bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+
+    <input id="phone" type="text" placeholder="Phone Number" tabindex="3"
+      class="border border-gray-300 dark:border-gray-600 p-2 w-full rounded focus:ring-2 focus:ring-blue-400 
+             bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+
+  <!-- ========================= ITEM FORM ========================= -->
+  {% elif entity_type == "item" %}
+
+    <input id="name" type="text" placeholder="Item Name" tabindex="1"
+      class="border border-gray-300 dark:border-gray-600 p-2 w-full rounded focus:ring-2 focus:ring-blue-400 
+             bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+
+    <input id="price" type="number" step="0.01" placeholder="Price (₹)" tabindex="2"
+      class="border border-gray-300 dark:border-gray-600 p-2 w-full rounded focus:ring-2 focus:ring-blue-400 
+             bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+
+  <!-- ========================= INVOICE FORM ========================= -->
+  {% elif entity_type == "invoice" %}
+
+    <!-- Customer Dropdown -->
+    <select id="customer_id"
+      class="border border-gray-300 dark:border-gray-600 p-2 w-full rounded bg-white dark:bg-gray-700 
+             text-gray-900 dark:text-white"
+      tabindex="1">
+      <option value="">Select Customer</option>
+      {% for c in customers %}
+        <option value="{{ c.id }}">{{ c.name }}</option>
+      {% endfor %}
+    </select>
+
+    <!-- Item Rows -->
+    <div id="itemsContainer" class="space-y-3 mt-4">
+
+      <div class="flex gap-2 items-center item-row">
+
+        <!-- ITEM DROPDOWN -->
+        <select class="item-select border border-gray-300 dark:border-gray-600 p-2 rounded bg-white dark:bg-gray-700 
+                       text-gray-900 dark:text-white w-1/3">
+          <option value="">Select Item</option>
+          {% for it in items %}
+            <option value="{{ it.id }}" data-price="{{ it.price }}">{{ it.name }}</option>
+          {% endfor %}
+        </select>
+
+        <!-- PRICE -->
+        <input type="number" placeholder="Price (₹)" step="0.01"
+          class="item-price border border-gray-300 dark:border-gray-600 p-2 rounded w-24 bg-white dark:bg-gray-700 
+                 text-gray-900 dark:text-white" disabled>
+
+        <!-- QTY -->
+        <input type="number" min="1" value="1"
+          class="item-qty border border-gray-300 dark:border-gray-600 p-2 rounded w-20 bg-white dark:bg-gray-700 
+                 text-gray-900 dark:text-white">
+
+        <!-- AMOUNT -->
+        <span class="item-amount text-gray-900 dark:text-gray-100 w-24 text-right">₹0.00</span>
+
+        <!-- REMOVE -->
+        <button type="button"
+          class="remove-row text-red-600 hover:text-red-800 text-xl font-extrabold">
+          &times;
+        </button>
+
+      </div>
+
+    </div>
+
+    <!-- Add Item Button -->
+    <button type="button" id="addItemBtn"
+      class="bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 px-3 py-1 rounded 
+             hover:bg-gray-300 dark:hover:bg-gray-600 transition mt-2">
+      + Add Item
+    </button>
+
+  {% endif %}
+
+  <button id="submit-btn" type="submit" tabindex="5"
+    class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
+      Save {{ entity_type|capitalize }}
+  </button>
+
+</form>
+</div>
+
+
+
+<script>
+const formElements = Array.from(
+  document.querySelectorAll('#universalAddForm input, #universalAddForm select, #universalAddForm button')
+);
+formElements.forEach((el, i) => {
+  el.addEventListener('keydown', (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const nextEl = formElements[i + 1];
+      if (nextEl) nextEl.focus();
+    }
+  });
+});
+
+
+function createItemRow() {
+  const container = document.getElementById("itemsContainer");
+  const clone = container.firstElementChild.cloneNode(true);
+
+  clone.querySelector(".item-select").value = "";
+  clone.querySelector(".item-price").value = "";
+  clone.querySelector(".item-price").disabled = true;
+  clone.querySelector(".item-qty").value = 1;
+  clone.querySelector(".item-amount").textContent = "₹0.00";
+
+  container.appendChild(clone);
+}
+
+if (document.getElementById("addItemBtn")) {
+  addItemBtn.onclick = () => createItemRow();
+}
+
+
+document.addEventListener("change", (e) => {
+  if (e.target.classList.contains("item-select")) {
+    const selected = e.target.selectedOptions[0];
+    const price = selected.dataset.price;
+    const row = e.target.closest(".item-row");
+    const priceInput = row.querySelector(".item-price");
+
+    priceInput.disabled = false;
+    priceInput.value = price;
+
+    updateAmount(row);
+  }
+});
+
+
+document.addEventListener("input", (e) => {
+  if (e.target.classList.contains("item-price") || e.target.classList.contains("item-qty")) {
+    const row = e.target.closest(".item-row");
+    updateAmount(row);
+  }
+});
+
+function updateAmount(row) {
+  const price = parseFloat(row.querySelector(".item-price").value) || 0;
+  const qty = parseInt(row.querySelector(".item-qty").value) || 0;
+  const amount = price * qty;
+
+  row.querySelector(".item-amount").textContent =
+    "₹" + amount.toLocaleString("en-IN", { minimumFractionDigits: 2 });
+}
+
+document.addEventListener("click", (e) => {
+  if (e.target.classList.contains("remove-row")) {
+    const rows = document.querySelectorAll(".item-row");
+    if (rows.length === 1) return alert("At least one item is required.");
+    e.target.closest(".item-row").remove();
+  }
+});
+
+document.getElementById("universalAddForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const entity = "{{ entity_type }}";
+
+  if (entity === "customer") {
+    const name = name.value.trim();
+    const email = email.value.trim();
+    const phone = phone.value.trim();
+
+    if (!/^[A-Za-z\s]{2,50}$/.test(name)) return alert("Invalid name.");
+    if (!/^\S+@\S+\.\S+$/.test(email)) return alert("Invalid email.");
+    if (!/^\d{7,15}$/.test(phone)) return alert("Invalid phone.");
+
+    return submitEntity("customer", { name, email, phone });
+  }
+
+  if (entity === "item") {
+    const name = document.getElementById("name").value.trim();
+    const price = parseFloat(document.getElementById("price").value);
+
+    if (!name) return alert("Item name required.");
+    if (isNaN(price) || price <= 0) return alert("Invalid price.");
+
+    return submitEntity("item", { name, price });
+  }
+
+if (entity === "invoice") {
+
+    const customer_id = parseInt(document.getElementById("customer_id").value);
+    if (isNaN(customer_id)) return alert("Please select a customer.");
+
+    const rows = document.querySelectorAll(".item-row");
+    const items = [];
+
+    for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        const select = row.querySelector(".item-select");
+        const price = parseFloat(row.querySelector(".item-price").value);
+        const qty = parseInt(row.querySelector(".item-qty").value);
+
+        if (!select.value) {
+            alert(`Please select an item in row ${i + 1}`);
+            select.focus();
+            return;
+        }
+        if (isNaN(price) || price <= 0) {
+            alert(`Enter a valid positive price in row ${i + 1}`);
+            row.querySelector(".item-price").focus();
+            return;
+        }
+        if (isNaN(qty) || qty <= 0) {
+            alert(`Enter a valid quantity in row ${i + 1}`);
+            row.querySelector(".item-qty").focus();
+            return;
+        }
+
+        items.push({
+            item_id: parseInt(select.value),
+            quantity: qty,
+            unit_price: price
+        });
+    }
+
+    await createInvoice({ customer_id, items });
+    return;
+}
+});
+async function submitEntity(entity, body) {
+  const res = await fetch(`/${entity}s`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  });
+  const data = await res.json();
+
+  if (!res.ok) return alert(data.error);
+
+  alert("Added successfully!");
+
+  if (entity === "customer") window.location.href = "/customers/_page";
+  if (entity === "item") window.location.href = "/items/_page";
+}
+
+/* ================================================================
+   Create Invoice API call
+================================================================ */
+async function createInvoice(body) {
+  const submitBtn = document.getElementById("submit-btn");
+  submitBtn.disabled = true;
+
+  const res = await fetch("/invoices", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  });
+
+  const data = await res.json();
+  submitBtn.disabled = false;
+
+  if (!res.ok) return alert(data.error);
+
+  alert(`Invoice #${data.invoice_id} created!`);
+  window.location.href = `/invoices/${data.invoice_id}`;
+}
+
+</script>
+
+{% endblock %}

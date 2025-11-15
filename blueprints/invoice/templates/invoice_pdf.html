@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Invoice #{{ invoice.id }}</title>
+
+  <style>
+    body { font-family: sans-serif; margin: 20px; color: #333; }
+    h1 { text-align: center; margin-bottom: 20px; }
+
+    .header-info { font-size: 14px; margin-bottom: 20px; }
+    .header-info p { margin: 3px 0; }
+
+    table {
+      width: 100%; border-collapse: collapse; margin-top: 20px;
+    }
+    th, td {
+      border: 1px solid #333; padding: 8px; text-align: center;
+    }
+    th { background: #eee; }
+
+    .totals-section {
+      margin-top: 25px; width: 45%; margin-left: auto; font-size: 14px;
+    }
+    .total-row {
+      display: flex; justify-content: space-between;
+      padding: 6px 0; border-bottom: 1px solid #ccc;
+    }
+    .total-row.final {
+      font-weight: bold; font-size: 16px;
+      border-top: 2px solid #333; border-bottom: none;
+      padding-top: 10px;
+    }
+
+    .arn-box {
+      margin-top: 12px; padding: 10px;
+      border: 1px solid #3b82f6;
+      background: #f0f9ff;
+      border-radius: 4px; font-size: 13px;
+    }
+    .arn-box.pending {
+      border-color: #f59e0b;
+      background: #fef3c7;
+    }
+    .arn-label { font-weight: 600; }
+    .arn-value {
+      font-family: monospace;
+      font-weight: 600;
+    }
+    .arn-generated {
+      font-size: 11px; color: #666;
+      margin-top: 4px; text-align: right;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>Invoice #{{ invoice.id }}</h1>
+
+  <div class="header-info">
+    <p><strong>Customer:</strong> {{ customer.name }}</p>
+    <p><strong>Email:</strong> {{ customer.email or '—' }}</p>
+    <p><strong>Phone:</strong> {{ customer.phone or '—' }}</p>
+    <p><strong>Date:</strong> {{ invoice.created_at.strftime('%Y-%m-%d') }}</p>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Item</th>
+        <th>Qty</th>
+        <th>Unit Price (₹)</th>
+        <th>Amount (₹)</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in items %}
+      <tr>
+        <td>{{ row.item_name }}</td>
+        <td>{{ row.quantity }}</td>
+        <td>₹{{ row.unit_price }}</td>
+        <td>₹{{ row.amount }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="totals-section">
+
+    <div class="total-row">
+      <span>Subtotal:</span>
+      <span>₹{{ subtotal }}</span>
+    </div>
+
+    {% if apply_gst %}
+    <div class="total-row">
+      <span>GST ({{ gst_percent }}%):</span>
+      <span>₹{{ gst_amount }}</span>
+    </div>
+    {% endif %}
+
+    <div class="total-row final">
+      <span>Total:</span>
+      <span>₹{{ total }}</span>
+    </div>
+
+    {% if invoice.arn_number %}
+    <div class="arn-box">
+      <div>
+        <span class="arn-label">ARN Number:</span>
+        <span class="arn-value">{{ invoice.arn_number }}</span>
+      </div>
+      <div class="arn-generated">
+        Generated: {{ invoice.arn_generated_at.strftime('%Y-%m-%d %H:%M') }}
+      </div>
+    </div>
+
+    {% else %}
+    <div class="arn-box pending">
+      <div>
+        <span class="arn-label">ARN Number:</span>
+        <span class="arn-value">Pending Generation</span>
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+
+</body>
+</html>
