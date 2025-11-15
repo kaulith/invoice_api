@@ -1,0 +1,29 @@
+meta {
+  name: Update an item.
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{base_url}}/items/{{item_id}}
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "name": "{{updated_item_name}}",
+    "price": "{{updated_item_price}}"
+  }
+  
+}
+
+vars:pre-request {
+  updated_item_name: Updated item
+  updated_item_price: 199
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

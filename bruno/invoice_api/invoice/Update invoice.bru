@@ -1,0 +1,36 @@
+meta {
+  name: Update invoice
+  type: http
+  seq: 6
+}
+
+put {
+  url: {{base_url}}/invoices/api/{{invoice_id}}
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "customer_id": {{customer_id}},
+    "items": [
+      {
+        "item_id": {{item_id}},
+        "quantity": 3,
+        "unit_price": 150
+      }
+    ]
+  }
+  
+}
+
+vars:pre-request {
+  invoice_id: 1
+  customer_id: 1
+  item_id: 1
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

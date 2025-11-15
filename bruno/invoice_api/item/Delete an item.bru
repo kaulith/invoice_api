@@ -1,0 +1,20 @@
+meta {
+  name: Delete an item.
+  type: http
+  seq: 5
+}
+
+delete {
+  url: {{base_url}}/items/{{item_id}}
+  body: none
+  auth: inherit
+}
+
+vars:pre-request {
+  item_id: 1
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

@@ -1,0 +1,20 @@
+meta {
+  name: Generate ARN manually.
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{base_url}}/invoices/{{invoice_id}}/generate_arn
+  body: none
+  auth: inherit
+}
+
+vars:pre-request {
+  invoice_id: 1
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

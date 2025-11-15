@@ -1,0 +1,25 @@
+meta {
+  name: Update a customer.
+  type: http
+  seq: 5
+}
+
+put {
+  url: {{base_url}}/customers/{{customer_id}}
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "name": "Updated Name",
+    "email": "updated@example.com",
+    "phone": "1231231234"
+  }
+  
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

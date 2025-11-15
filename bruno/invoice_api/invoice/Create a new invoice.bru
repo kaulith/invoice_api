@@ -1,0 +1,35 @@
+meta {
+  name: Create a new invoice
+  type: http
+  seq: 5
+}
+
+post {
+  url: POST {{base_url}}/invoices/
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "customer_id": {{customer_id}},
+    "items": [
+      {
+        "item_id": {{item_id}},
+        "quantity": 2,
+        "unit_price": 100
+      }
+    ]
+  }
+  
+}
+
+vars:pre-request {
+  customer_id: 1
+  item_id: 1
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

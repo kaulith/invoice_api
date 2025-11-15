@@ -1,0 +1,20 @@
+meta {
+  name: Process invoice using external helper process_invoice()
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{base_url}}/invoices/process_invoice/{{invoice_id}}
+  body: none
+  auth: inherit
+}
+
+vars:pre-request {
+  invoice_id: 1
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

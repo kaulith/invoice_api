@@ -1,0 +1,32 @@
+meta {
+  name: login
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{base_url}}/auth/login
+  body: formUrlEncoded
+  auth: inherit
+}
+
+body:json {
+  username: {{username}}
+  password: {{password}}
+  
+}
+
+body:form-urlencoded {
+  "username:": {{username}}
+  "password: ": {{password}}
+}
+
+vars:pre-request {
+  username: testuser
+  password: test123
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

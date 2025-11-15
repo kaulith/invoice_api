@@ -1,0 +1,16 @@
+meta {
+  name: get all cutomers
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{base_url}}/customers/
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

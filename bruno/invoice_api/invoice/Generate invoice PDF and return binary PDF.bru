@@ -1,0 +1,27 @@
+meta {
+  name: Generate invoice PDF and return binary PDF.
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{base_url}}/invoices/generate_pdf
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "invoice_id": {{invoice_id}}
+  }
+  
+}
+
+vars:pre-request {
+  invoice_id: 1
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

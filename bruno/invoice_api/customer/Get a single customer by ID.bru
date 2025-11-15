@@ -1,0 +1,20 @@
+meta {
+  name: Get a single customer by ID.
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{base_url}}/customers/{{customer_id}}
+  body: json
+  auth: inherit
+}
+
+vars:pre-request {
+  customer_id: 1
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
